@@ -7,16 +7,33 @@ use D4sign\Service;
 
 class Documents extends Service
 {
-	
-	public function changeemail($documentKey, $email_before, $email_after,$key='')
+	public function changepasswordcode($documentKey, $keySigner, $email, $code)
     {
-        $data = array("email-before" => json_encode($email_before),"email-after" => json_encode($email_after),"key-signer" => json_encode($key));
-        return $this->client->request("/documents/$documentKey/changeemail", "POST", $data, 200);
+        $data = array("email" => json_encode($email),"password-code" => json_encode($code),"key-signer" => json_encode($keySigner));
+        return $this->client->request("/documents/$documentKey/changepasswordcode", "POST", $data, 200);
+    }
+	public function changesmsnumber($documentKey, $keySigner, $email, $sms)
+    {
+        $data = array("email" => json_encode($email),"sms-number" => json_encode($sms),"key-signer" => json_encode($keySigner));
+        return $this->client->request("/documents/$documentKey/changesmsnumber", "POST", $data, 200);
+    }
+    
+	
+	public function removeemail($documentKey, $email, $key)
+    {
+        $data = array("email-signer" => json_encode($email),"key-signer" => json_encode($key));
+        return $this->client->request("/documents/$documentKey/removeemaillist", "POST", $data, 200);
+    }
+    
+    public function changeemail($documentKey, $email_before, $email_after,$key='')
+    {
+    	$data = array("email-before" => json_encode($email_before),"email-after" => json_encode($email_after),"key-signer" => json_encode($key));
+    	return $this->client->request("/documents/$documentKey/changeemail", "POST", $data, 200);
     }
 	
-	public function find($documentKey = '')
+	public function find($documentKey = '', $page = 1) 
     {
-        $data = array();
+        $data = array("pg" => $page);
         return $this->client->request("/documents/$documentKey", "GET", $data, 200);
     }
     
@@ -26,15 +43,15 @@ class Documents extends Service
     	return $this->client->request("/documents/$documentKey/list", "GET", $data, 200);
     }
     
-    public function status($status)
+    public function status($status, $page = 1) 
     {
-    	$data = array();
+    	$data = array("pg" => $page);
     	return $this->client->request("/documents/$status/status", "GET", $data, 200);
     }
     
-    public function safe($safeKey, $uuid_folder = '')
+    public function safe($safeKey, $uuid_folder = '', $page = 1) 
     {
-    	$data = array();
+        $data = array("pg" => $page);
     	return $this->client->request("/documents/$safeKey/safe/$uuid_folder", "GET", $data, 200);
     }
 
@@ -48,10 +65,53 @@ class Documents extends Service
 		return $this->_upload($uuid_safe, $filePath, $uuid_folder);
     	
     }
-
-    public function cancel($documentKey)
+    
+    
+    public function uploadbinary($uuid_safe, $base64_binary, $mime_type, $name, $uuid_folder = '')
     {
-    	$data = array();
+    	 
+    	if (!$uuid_safe){
+    		return 'UUID Safe not set.';
+    	}
+    	 
+    	$data = array("base64_binary_file" => $base64_binary,
+    				"mime_type"=>$mime_type,
+    				"name"=>$name,
+    				"uuid_folder"=> json_encode($uuid_folder));
+    	
+    	return $this->client->request("/documents/$uuid_safe/uploadbinary", "POST", $data, 200);
+    	 
+    }
+    
+    public function uploadslavebinary($uuid_master, $base64_binary, $mime_type, $name)
+    {
+    
+    	if (!$uuid_master){
+    		return 'UUID master document not set.';
+    	}
+    
+    	$data = array("base64_binary_file" => $base64_binary,
+    			"mime_type"=>$mime_type,
+    			"name"=>$name);
+    	 
+    	return $this->client->request("/documents/$uuid_master/uploadslavebinary", "POST", $data, 200);
+    
+    }
+    
+    public function uploadslave($uuid_original_file, $filePath)
+    {
+    	 
+    	if (!$uuid_original_file){
+    		return 'UUID Original file not set.';
+    	}
+    	 
+    	return $this->_uploadslave($uuid_original_file, $filePath);
+    	 
+    }
+
+    public function cancel($documentKey, $comment = '')
+    {
+        $data = array("comment" => json_encode($comment));
     	return $this->client->request("/documents/$documentKey/cancel", "POST", $data, 200);
     }
 
@@ -114,7 +174,17 @@ class Documents extends Service
         return $this->client->request("/documents/$uuid_safe/upload", "POST", $data, 200);
 
     }
-
+    
+    private function _uploadslave($uuid_original_file, $filePath)
+    {
+    	$f = $this->_getCurlFile($filePath);
+    
+    	$data = array("file" => $f);
+    
+    	return $this->client->request("/documents/$uuid_original_file/uploadslave", "POST", $data, 200);
+    
+    }
+    
     private function _getCurlFile($filename, $contentType='', $postname='')
     {
         // PHP 5.5 introduced a CurlFile object that deprecates the old @filename syntax
@@ -139,4 +209,21 @@ class Documents extends Service
 
         return $value;
     }
+    
+    public function uploadhash($uuid_safe, $sha256, $sha512, $name, $uuid_folder = '')
+    {
+    
+    	if (!$uuid_safe){
+    		return 'UUID Safe not set.';
+    	}
+    
+    	$data = array("sha256" => $sha256,
+    			"sha512"=>$sha512,
+    			"name"=>$name,
+    			"uuid_folder"=> json_encode($uuid_folder));
+    	 
+    	return $this->client->request("/documents/$uuid_safe/uploadhash", "POST", $data, 200);
+    
+    }
+    
 }

@@ -1,11 +1,11 @@
 {
-    "name": "rafa-acioly/d4sign-php",
+    "name": "magus94/d4sign-php",
     "description": "D4sign SDK",
     "type": "library",
     "authors": [
         {
-            "name": "Rafael Acioly",
-            "email": "aciolyr@gmail.com"
+            "name": "Gustavo Melo",
+            "email": "gustavomb2008@hotmail.com"
         }
     ],
     "require": {
